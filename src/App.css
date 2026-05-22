@@ -1,0 +1,25 @@
+/* Standard custom page transitions and specific page animations if needed */
+
+.fade-in {
+  animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.glow-hover {
+  transition: all 0.3s ease;
+}
+
+.glow-hover:hover {
+  box-shadow: 0 0 30px rgba(212, 167, 28, 0.3);
+  border-color: rgba(212, 167, 28, 0.6);
+}
