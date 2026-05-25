@@ -6,8 +6,8 @@ const BeforeAfterSlider = () => {
   const [isDragging, setIsDragging] = useState(false);
   const containerRef = useRef(null);
 
-  const beforeImage = 'https://images.unsplash.com/photo-1583391265517-35bbdba01229?q=80&w=1200&auto=format&fit=crop'; // Saree texture / product lay
-  const afterImage = 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1200&auto=format&fit=crop'; // Premium model close up
+  const beforeImage = '/test_saree.png'; // Premium local red Banarasi saree flat lay
+  const afterImage = '/after_saree.png'; // Matching premium AI palace model shoot
 
   const handleMove = (clientX) => {
     if (!containerRef.current) return;
@@ -44,7 +44,7 @@ const BeforeAfterSlider = () => {
     <div className="w-full max-w-4xl mx-auto px-4">
       <div 
         ref={containerRef}
-        className="slider-container relative aspect-[16/9] w-full rounded-2xl overflow-hidden glass-panel-gold glow-gold border border-gold-500/10 cursor-ew-resize select-none"
+        className="slider-container relative aspect-[4/3] md:aspect-[16/10] w-full rounded-2xl overflow-hidden glass-panel-gold glow-gold border border-gold-500/10 cursor-ew-resize select-none"
         onMouseDown={() => setIsDragging(true)}
         onTouchStart={() => setIsDragging(true)}
         onMouseMove={handleMouseMove}
@@ -70,8 +70,7 @@ const BeforeAfterSlider = () => {
           <img 
             src={beforeImage} 
             alt="Original Saree Product" 
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none filter brightness-90"
-            style={{ width: containerRef.current ? containerRef.current.offsetWidth : '100%' }}
+            className="absolute inset-0 w-full h-full object-cover pointer-events-none filter brightness-95"
           />
           {/* Label: Flat Lay Product */}
           <div className="absolute left-4 top-4 z-20 bg-dark-950/80 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-sm text-white/80 font-display font-medium text-xs uppercase tracking-widest">

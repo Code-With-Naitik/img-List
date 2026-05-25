@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, ShieldCheck, Zap, Heart, CheckCircle2, ChevronRight, 
+  Sparkles, ShieldCheck, Zap, Heart, CheckCircle2, ChevronRight, ChevronLeft, 
   UploadCloud, ArrowRight, Star, ChevronDown, Check,
-  Camera, ShoppingBag, Instagram, Eye, HelpCircle, LayoutGrid
+  Camera, ShoppingBag, Instagram, Eye, HelpCircle, LayoutGrid,
+  ArrowLeftRight, Quote
 } from 'lucide-react';
 import BeforeAfterSlider from '../components/BeforeAfterSlider';
 
@@ -15,13 +16,131 @@ const Home = ({ setCurrentPage }) => {
   const [openFaq, setOpenFaq] = useState(null);
 
   // Gallery filters and items
-  const [activeFilter, setActiveFilter] = useState('sarees');
+  const [activeFilter, setActiveFilter] = useState('all');
   const [previewImage, setPreviewImage] = useState(null);
+  const [dynamicItems, setDynamicItems] = useState([]);
+
+  const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+
+  useEffect(() => {
+    const fetchShowroom = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/admin/portfolio`);
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map((item, index) => {
+            const numId = item.id || index;
+            const fallbacks = {
+              sarees: ['/after_saree.png', '/model_green.png', '/model_purple.png'],
+              lehengas: ['/model_purple.png', '/after_saree.png', '/model_green.png'],
+              kurtis: ['/model_green.png', '/model_purple.png', '/after_saree.png'],
+              jewelry: ['/model_purple.png', '/after_saree.png', '/model_green.png']
+            };
+            const list = fallbacks[item.category || 'sarees'] || fallbacks.sarees;
+            return {
+              id: item._id || item.id,
+              category: item.category || 'sarees',
+              title: item.title || '',
+              img: item.img || list[numId % list.length],
+              location: item.location || 'Studio Workspace',
+              model: item.model || 'AI Custom Model',
+              time: item.lighting || item.time || 'Studio Lighting'
+            };
+          });
+          setDynamicItems(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching dynamic showroom items:', err);
+      }
+    };
+    fetchShowroom();
+  }, []);
 
   // Form states for the free sample
   const [fileName, setFileName] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Interactive Saree Showcase State (Hero)
+  const [activeHeroFabric, setActiveHeroFabric] = useState(0);
+  const [heroSliderPosition, setHeroSliderPosition] = useState(50);
+  const heroContainerRef = useRef(null);
+
+  const heroFabrics = [
+    {
+      name: 'Royal Banarasi',
+      colorName: 'Crimson Red',
+      colorClass: 'bg-[#B22222]',
+      flatLay: '/test_saree.png',
+      modelShoot: '/after_saree.png',
+      location: 'Udaipur Palace Courtyard',
+      archetype: 'Royal Empress Pose'
+    },
+    {
+      name: 'Emerald Chanderi',
+      colorName: 'Forest Green',
+      colorClass: 'bg-[#005c30]',
+      flatLay: '/flat_green.png',
+      modelShoot: '/model_green.png',
+      location: 'Jaipur Heritage Haveli',
+      archetype: 'Elegant Modern Grace'
+    },
+    {
+      name: 'Kanjeevaram Brocade',
+      colorName: 'Royal Magenta',
+      colorClass: 'bg-[#7a005a]',
+      flatLay: '/flat_purple.png',
+      modelShoot: '/model_purple.png',
+      location: 'Taj Luxury Suite, Mumbai',
+      archetype: 'Premium Boutique Close-up'
+    }
+  ];
+
+  const [isHeroDragging, setIsHeroDragging] = useState(false);
+
+  const handleHeroMove = (clientX) => {
+    if (!heroContainerRef.current) return;
+    const rect = heroContainerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const position = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setHeroSliderPosition(position);
+  };
+
+  const handleHeroMouseDown = (e) => {
+    e.preventDefault();
+    setIsHeroDragging(true);
+    handleHeroMove(e.clientX);
+  };
+
+  const handleHeroMouseMove = (e) => {
+    if (!isHeroDragging) return;
+    handleHeroMove(e.clientX);
+  };
+
+  const handleHeroTouchStart = (e) => {
+    setIsHeroDragging(true);
+    if (e.touches.length > 0) {
+      handleHeroMove(e.touches[0].clientX);
+    }
+  };
+
+  const handleHeroTouchMove = (e) => {
+    if (!isHeroDragging) return;
+    if (e.touches.length > 0) {
+      handleHeroMove(e.touches[0].clientX);
+    }
+  };
+
+  useEffect(() => {
+    const handleHeroMouseUp = () => setIsHeroDragging(false);
+    window.addEventListener('mouseup', handleHeroMouseUp);
+    window.addEventListener('touchend', handleHeroMouseUp);
+
+    return () => {
+      window.removeEventListener('mouseup', handleHeroMouseUp);
+      window.removeEventListener('touchend', handleHeroMouseUp);
+    };
+  }, [isHeroDragging]);
 
   const stats = [
     { value: '500,000+', label: 'AI Photos Generated' },
@@ -101,6 +220,7 @@ const Home = ({ setCurrentPage }) => {
   ];
 
   const portfolioCategories = [
+    { id: 'all', label: 'All Samples' },
     { id: 'sarees', label: 'Sarees' },
     { id: 'lehengas', label: 'Lehengas' },
     { id: 'kurtis', label: 'Kurtis' },
@@ -109,20 +229,45 @@ const Home = ({ setCurrentPage }) => {
 
   const portfolioItems = [
     // Sarees
-    { id: 1, category: 'sarees', title: 'Banarasi Brocade Saree', img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop' },
-    { id: 2, category: 'sarees', title: 'Kanjeevaram Silk Elegance', img: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop' },
-    { id: 3, category: 'sarees', title: 'Emerald Chanderi Collection', img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop' },
+    { id: 1, category: 'sarees', title: 'Heritage Golden Zari Silk Saree', img: 'https://images.unsplash.com/photo-1621184455862-c163dfb30e0f?q=80&w=600&auto=format&fit=crop' },
+    { id: 2, category: 'sarees', title: 'Royal Violet Banarasi Silk Saree', img: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=600&auto=format&fit=crop' },
+    { id: 3, category: 'sarees', title: 'Traditional Georgette Blue Saree', img: 'https://images.unsplash.com/photo-1631856955409-dfb5c2a13f70?q=80&w=600&auto=format&fit=crop' },
+    { id: 4, category: 'sarees', title: 'Ivory Gold Kanjeevaram Saree', img: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?q=80&w=600&auto=format&fit=crop' },
+    { id: 5, category: 'sarees', title: 'Sunshine Yellow Silk Saree', img: 'https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=600&auto=format&fit=crop' },
     // Lehengas
-    { id: 4, category: 'lehengas', title: 'Royal Crimson Lehenga', img: 'https://images.unsplash.com/photo-1610030470208-eb1a9c39474b?q=80&w=600&auto=format&fit=crop' },
-    { id: 5, category: 'lehengas', title: 'Gold Velvet Bridal Set', img: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop' },
+    { id: 6, category: 'lehengas', title: 'Royal Crimson Velvet Lehenga', img: 'https://images.unsplash.com/photo-1610030470208-eb1a9c39474b?q=80&w=600&auto=format&fit=crop' },
+    { id: 7, category: 'lehengas', title: 'Traditional Gold Zardozi Lehenga', img: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?q=80&w=600&auto=format&fit=crop' },
+    { id: 8, category: 'lehengas', title: 'Deep Maroon Velvet Lehenga', img: 'https://images.unsplash.com/photo-1614975058789-41316d0e2e9c?q=80&w=600&auto=format&fit=crop' },
+    { id: 9, category: 'lehengas', title: 'Ivory Gold Chanderi Lehenga', img: 'https://images.unsplash.com/photo-1596783074918-c84cb06531ca?q=80&w=600&auto=format&fit=crop' },
+    { id: 10, category: 'lehengas', title: 'Royal Mustard Wedding Lehenga', img: 'https://images.unsplash.com/photo-1601121141461-9d6647bca1ed?q=80&w=600&auto=format&fit=crop' },
     // Kurtis
-    { id: 6, category: 'kurtis', title: 'Modern Indigo Anarkali', img: 'https://images.unsplash.com/photo-1608963503737-f3329246b7a0?q=80&w=600&auto=format&fit=crop' },
-    { id: 7, category: 'kurtis', title: 'Casual Pastel Cotton Wear', img: 'https://images.unsplash.com/photo-1609357518652-6cf0416f0cbe?q=80&w=600&auto=format&fit=crop' },
+    { id: 11, category: 'kurtis', title: 'Modern Indigo Anarkali Suit', img: 'https://images.unsplash.com/photo-1608963503737-f3329246b7a0?q=80&w=600&auto=format&fit=crop' },
+    { id: 12, category: 'kurtis', title: 'Casual Linen Pastel Wear', img: 'https://images.unsplash.com/photo-1609357518652-6cf0416f0cbe?q=80&w=600&auto=format&fit=crop' },
+    { id: 13, category: 'kurtis', title: 'Emerald Green Floral Kurti', img: 'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=600&auto=format&fit=crop' },
+    { id: 14, category: 'kurtis', title: 'Sage Green Silk Kurti Set', img: 'https://images.unsplash.com/photo-1615486511284-88484a9e224e?q=80&w=600&auto=format&fit=crop' },
+    { id: 15, category: 'kurtis', title: 'Floral Designer Kurti Dupatta', img: 'https://images.unsplash.com/photo-1621012430307-b4774b78d3cb?q=80&w=600&auto=format&fit=crop' },
     // Jewelry
-    { id: 8, category: 'jewelry', title: 'Antique Polki Choker Set', img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop' },
+    { id: 16, category: 'jewelry', title: 'Antique Polki Choker Set', img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?q=80&w=600&auto=format&fit=crop' },
+    { id: 17, category: 'jewelry', title: 'Heritage Temple Gold Bangles', img: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?q=80&w=600&auto=format&fit=crop' },
+    { id: 18, category: 'jewelry', title: 'Kundan Diamond Maang Tikka', img: 'https://images.unsplash.com/photo-1611601679655-7c8bc197f0c6?q=80&w=600&auto=format&fit=crop' },
+    { id: 19, category: 'jewelry', title: 'Imperial Emerald Royal Ring', img: 'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?q=80&w=600&auto=format&fit=crop' },
+    { id: 20, category: 'jewelry', title: 'Pearl Bridal Ornament Necklace', img: 'https://images.unsplash.com/photo-1561414927-6d86591d0c4f?q=80&w=600&auto=format&fit=crop' }
   ];
 
-  const filteredItems = portfolioItems.filter(item => item.category === activeFilter);
+  const mergedItems = [...dynamicItems];
+  portfolioItems.forEach(staticItem => {
+    const isDuplicate = dynamicItems.some(dynItem => 
+      (dynItem.img && dynItem.img === staticItem.img) || 
+      (dynItem.title && staticItem.title && dynItem.title.toLowerCase() === staticItem.title.toLowerCase())
+    );
+    if (!isDuplicate) {
+      mergedItems.push(staticItem);
+    }
+  });
+
+  const filteredItems = activeFilter === 'all'
+    ? mergedItems
+    : mergedItems.filter(item => item.category === activeFilter);
 
   const steps = [
     {
@@ -298,97 +443,209 @@ const Home = ({ setCurrentPage }) => {
     <div className="pt-24 pb-12 overflow-x-hidden">
       
       {/* ---------------- SECTION 1 — HERO SECTION ---------------- */}
-      <section className="relative min-h-[90vh] flex items-center justify-center pt-10 pb-20 overflow-hidden">
-        {/* Dynamic lighting gradients */}
-        <div className="absolute top-1/4 left-1/4 w-[350px] h-[350px] rounded-full bg-gold-600/10 blur-[100px] pointer-events-none animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
+      <section className="relative min-h-[95vh] flex items-center pt-12 pb-24 overflow-hidden bg-[radial-gradient(ellipse_at_top,rgba(20,20,25,0.45),#050507)]">
+        {/* Dynamic ambient lights */}
+        <div className="absolute top-1/4 left-1/12 w-[350px] h-[350px] rounded-full bg-gold-600/5 blur-[100px] pointer-events-none animate-pulse" />
+        <div className="absolute bottom-1/3 right-1/12 w-[450px] h-[450px] rounded-full bg-white/5 blur-[120px] pointer-events-none" />
         
-        {/* Abstract luxury background backdrop */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(20,20,25,0.8),#050507)] opacity-95 z-0" />
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-          
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="flex justify-center mb-6"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-              <Sparkles className="w-4 h-4 text-gold-400" />
-              <span className="font-display font-medium text-xs text-white/90 uppercase tracking-[0.2em]">
-                Revolutionizing Saree E-Commerce
-              </span>
-            </div>
-          </motion.div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+            
+            {/* Left Column: Premium Text & Staggered Animations */}
+            <div className="lg:col-span-7 space-y-8 text-left">
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-gold-400" />
+                <span className="font-display font-medium text-[10px] sm:text-xs text-white/90 uppercase tracking-[0.25em]">
+                  Next-Gen AI Saree Drapery
+                </span>
+              </motion.div>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-            className="font-serif text-5xl md:text-7xl font-medium tracking-tight text-white mb-6 leading-tight max-w-5xl mx-auto"
-          >
-            Premium AI Fashion Photoshoots <br className="hidden md:block"/>
-            <span className="text-gold-500 italic">For Saree Brands</span>
-          </motion.h1>
+              <div className="space-y-4">
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.1 }}
+                  className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-[4.2rem] font-medium tracking-tight text-white leading-[1.1] max-w-4xl"
+                >
+                  Turn Flat Lays <br />
+                  <span className="text-gold-500 italic font-normal text-silver-gradient">Into Palace Shoots</span>
+                </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="font-sans font-light text-dark-300 text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-          >
-            Create high-end luxury model photos without hiring expensive models, makeup artists, photographers, or luxury studios.
-          </motion.p>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
-          >
-            <button
-              onClick={() => setCurrentPage('order')}
-              className="w-full sm:w-auto bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-dark-950 font-display font-semibold text-sm tracking-wider uppercase py-4 px-8 rounded-sm shadow-xl shadow-gold-600/10 hover:shadow-gold-500/25 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2.5"
-            >
-              <span>Get Free Sample</span>
-              <ArrowRight className="w-4.5 h-4.5" />
-            </button>
-            <button
-              onClick={() => setCurrentPage('portfolio')}
-              className="w-full sm:w-auto bg-transparent border border-white/20 hover:border-gold-500 text-white font-display font-medium text-sm tracking-wider uppercase py-4 px-8 rounded-sm hover:text-gold-400 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>View Portfolio</span>
-            </button>
-          </motion.div>
-
-          {/* Counters Grid */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 1, delay: 0.8 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-8 pt-10 border-t border-white/5 max-w-4xl mx-auto"
-          >
-            {stats.map((stat, idx) => (
-              <div key={idx} className="text-center">
-                <div className="font-display font-bold text-2xl md:text-3xl text-white mb-1.5">{stat.value}</div>
-                <div className="font-sans font-light text-xs text-dark-400 uppercase tracking-widest">{stat.label}</div>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="font-sans font-light text-dark-300 text-base sm:text-lg md:text-xl max-w-2xl leading-relaxed"
+                >
+                  Keep 100% of your intricate zari borders, weave details, and textures unaltered. Virtually drape your sarees onto stunning AI models in seconds.
+                </motion.p>
               </div>
-            ))}
-          </motion.div>
 
-          {/* Trusted By strip */}
-          <div className="mt-16 text-center">
-            <span className="font-sans font-light text-[10px] text-dark-500 uppercase tracking-[0.25em] block mb-4">
-              Trusted by leading ethnic brands
-            </span>
-            <div className="flex flex-wrap items-center justify-center gap-x-12 gap-y-6 opacity-40 hover:opacity-75 transition-opacity duration-300">
-              {brandLogos.map((logo, index) => (
-                <span key={index} className="font-serif text-lg tracking-widest text-white italic">{logo}</span>
-              ))}
+              {/* Action row */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="flex flex-col sm:flex-row items-center gap-4 pt-2"
+              >
+                <button
+                  onClick={() => setCurrentPage('order')}
+                  className="w-full sm:w-auto bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-dark-950 font-display font-semibold text-xs tracking-wider uppercase py-4 px-8 rounded-sm shadow-xl shadow-gold-600/10 hover:shadow-gold-500/25 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2.5"
+                >
+                  <span>Get Free Sample</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => {
+                    const sliderSection = document.querySelector('.bg-dark-950');
+                    if (sliderSection) {
+                      sliderSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                  className="w-full sm:w-auto bg-transparent border border-white/10 hover:border-gold-500 text-white font-display font-medium text-xs tracking-wider uppercase py-4 px-8 rounded-sm hover:text-gold-400 transition-all duration-300 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>Interactive Demo</span>
+                </button>
+              </motion.div>
+
+              {/* Mini Benefits Row */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 1, delay: 0.5 }}
+                className="grid grid-cols-3 gap-4 pt-8 border-t border-white/5 max-w-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-gold-400 shrink-0" />
+                  <span className="font-sans text-xs text-dark-400">100% Texture Match</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-gold-400 shrink-0" />
+                  <span className="font-sans text-xs text-dark-400">24h Express Delivery</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-gold-400 shrink-0" />
+                  <span className="font-sans text-xs text-dark-400">₹99/image Starts</span>
+                </div>
+              </motion.div>
+
             </div>
-          </div>
 
+            {/* Right Column: Unique Interactive Dressing Canvas */}
+            <div className="lg:col-span-5 relative">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="relative"
+              >
+                {/* Glow border wrapper */}
+                <div className="glass-panel-gold glow-gold p-3 rounded-2xl border border-gold-500/15 bg-dark-950/40">
+                  
+                  {/* Floating properties tag */}
+                  <div className="absolute left-6 top-6 z-20 bg-dark-950/90 border border-gold-500/30 backdrop-blur-md px-3 py-1.5 rounded-sm text-[10px] font-display font-medium uppercase tracking-widest text-gold-400 flex items-center gap-1.5 select-none shadow-2xl">
+                    <div className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-ping" />
+                    <span>AI Generate Render</span>
+                  </div>
+
+                  {/* Showcase slider container */}
+                  <div 
+                    ref={heroContainerRef}
+                    onMouseDown={handleHeroMouseDown}
+                    onTouchStart={handleHeroTouchStart}
+                    onMouseMove={handleHeroMouseMove}
+                    onTouchMove={handleHeroTouchMove}
+                    className="relative w-full aspect-[4/5] rounded-xl overflow-hidden cursor-ew-resize select-none bg-dark-900 border border-white/5"
+                  >
+                    {/* After Image (Right/Background) */}
+                    <img 
+                      src={heroFabrics[activeHeroFabric].modelShoot} 
+                      alt="AI Luxury Shoot" 
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    />
+
+                    {/* Clip-path Overlay (Before Image / Left) */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ clipPath: `polygon(0 0, ${heroSliderPosition}% 0, ${heroSliderPosition}% 100%, 0 100%)` }}
+                    >
+                      <img 
+                        src={heroFabrics[activeHeroFabric].flatLay} 
+                        alt="Original Saree Flat Lay" 
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none filter brightness-95"
+                      />
+                    </div>
+
+                    {/* Interactive Divider Line */}
+                    <div 
+                      className="absolute top-0 bottom-0 w-[1.5px] bg-gold-400 z-10 pointer-events-none shadow-[0_0_10px_rgba(212,167,28,0.6)]"
+                      style={{ left: `${heroSliderPosition}%` }}
+                    >
+                      {/* Split Handle button */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-dark-950 border border-gold-400/80 text-gold-400 flex items-center justify-center shadow-lg">
+                        <ArrowLeftRight className="w-3.5 h-3.5 text-gold-400" />
+                      </div>
+                    </div>
+
+                    {/* Info pill at bottom */}
+                    <div className="absolute bottom-4 left-4 right-4 z-10 bg-dark-950/80 border border-white/5 backdrop-blur-md p-3 rounded-md select-none text-left">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="text-[10px] text-gold-400 font-display uppercase tracking-widest font-semibold">
+                            {heroFabrics[activeHeroFabric].name}
+                          </p>
+                          <p className="text-[9px] text-white/55 font-sans mt-0.5">
+                            Loc: {heroFabrics[activeHeroFabric].location}
+                          </p>
+                        </div>
+                        <span className="text-[8px] border border-white/10 px-2 py-0.5 rounded-full text-white/40 uppercase font-sans tracking-wide">
+                          {heroFabrics[activeHeroFabric].archetype}
+                        </span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+
+                {/* Saree selectors below */}
+                <div className="mt-6 flex items-center justify-between px-2">
+                  <span className="font-sans font-light text-[10px] text-dark-400 uppercase tracking-widest">
+                    Switch Saree Fabric Demo:
+                  </span>
+                  <div className="flex gap-3">
+                    {heroFabrics.map((fabric, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setActiveHeroFabric(idx)}
+                        className={`group relative flex items-center justify-center w-8 h-8 rounded-full border cursor-pointer transition-all duration-300 ${
+                          activeHeroFabric === idx 
+                            ? 'border-gold-500 scale-110 shadow-lg shadow-gold-500/20' 
+                            : 'border-white/15 hover:border-gold-500/50 scale-100'
+                        }`}
+                        title={fabric.name}
+                      >
+                        <div className={`w-5 h-5 rounded-full ${fabric.colorClass} transition-transform group-hover:scale-90`} />
+                        
+                        {/* Selector indicator */}
+                        {activeHeroFabric === idx && (
+                          <div className="absolute -bottom-1.5 w-1 h-1 rounded-full bg-gold-400" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              </motion.div>
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -396,9 +653,9 @@ const Home = ({ setCurrentPage }) => {
       <section className="py-24 bg-dark-950 border-t border-b border-white/5 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-white mb-4">
+            <h2 className="font-serif text-3xl md:text-5xl font-medium tracking-tight text-white mb-4 leading-normal py-1">
               Transform Simple Product Images <br />
-              <span className="text-gold-500 italic">Into Premium Fashion Shoots</span>
+              <span className="text-gold-500 italic inline-block py-1">Into Premium Fashion Shoots</span>
             </h2>
             <p className="font-sans font-light text-dark-400 text-base max-w-2xl mx-auto">
               Our advanced AI wraps your saree flat lay files perfectly onto professional photorealistic avatars. Compare the breathtaking transformation below.
@@ -513,10 +770,10 @@ const Home = ({ setCurrentPage }) => {
             </div>
           </div>
 
-          {/* Masonry Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* 4-Column Side-By-Side Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
             <AnimatePresence mode="popLayout">
-              {filteredItems.map((item) => (
+              {filteredItems.slice(0, 4).map((item) => (
                 <motion.div
                   layout
                   key={item.id}
@@ -524,29 +781,43 @@ const Home = ({ setCurrentPage }) => {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.4 }}
-                  className="group relative overflow-hidden rounded-md border border-white/5 aspect-[3/4] cursor-pointer"
+                  className="group relative overflow-hidden rounded-lg border border-white/5 cursor-pointer bg-dark-950/40 hover:border-gold-500/30 transition-all duration-500 w-full shadow-2xl flex flex-col"
                   onClick={() => setPreviewImage(item.img)}
                 >
-                  <img 
-                    src={item.img} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  {/* Subtle dark gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-transparent to-transparent opacity-0 group-hover:opacity-90 transition-opacity duration-300 flex flex-col justify-end p-6" />
-                  
-                  {/* Hover content */}
-                  <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                    <p className="text-gold-500 font-display text-[10px] uppercase tracking-widest mb-1.5">
-                      {item.category}
-                    </p>
-                    <h4 className="font-display font-medium text-white text-base leading-tight mb-2">
-                      {item.title}
-                    </h4>
-                    <span className="font-sans text-xs text-white/60 hover:text-white flex items-center gap-1.5">
-                      <span>Preview Shoot</span>
-                      <ChevronRight className="w-3 h-3" />
-                    </span>
+                  <div className="aspect-[3/4] w-full overflow-hidden relative">
+                    <img 
+                      src={item.img} 
+                      alt={item.title} 
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        const fallbacks = {
+                          sarees: ['/after_saree.png', '/model_green.png', '/model_purple.png'],
+                          lehengas: ['/model_purple.png', '/after_saree.png', '/model_green.png'],
+                          kurtis: ['/model_green.png', '/model_purple.png', '/after_saree.png'],
+                          jewelry: ['/model_purple.png', '/after_saree.png', '/model_green.png']
+                        };
+                        const list = fallbacks[item.category] || fallbacks.sarees;
+                        const idx = (Number(item.id) || 0) % list.length;
+                        e.target.src = list[idx];
+                      }}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    {/* Subtle dark gradient overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-950/95 via-dark-950/20 to-transparent opacity-60 group-hover:opacity-90 transition-opacity duration-300 flex flex-col justify-end p-6 z-10 pointer-events-none" />
+                    
+                    {/* Hover content */}
+                    <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-300 z-20 pointer-events-none">
+                      <p className="text-gold-500 font-display text-[10px] uppercase tracking-widest mb-1.5">
+                        {item.category}
+                      </p>
+                      <h4 className="font-display font-medium text-white text-base leading-tight mb-2 pointer-events-auto">
+                        {item.title}
+                      </h4>
+                      <span className="font-sans text-xs text-white/60 hover:text-white flex items-center gap-1.5 pointer-events-auto">
+                        <span>Preview Shoot</span>
+                        <ChevronRight className="w-3 h-3" />
+                      </span>
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -870,7 +1141,10 @@ const Home = ({ setCurrentPage }) => {
 
       {/* ---------------- SECTION 9 — TESTIMONIALS ---------------- */}
       <section className="py-24 bg-dark-950 relative overflow-hidden">
-        <div className="max-w-4xl mx-auto px-4 relative z-10">
+        {/* Decorative backdrop elements */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-gold-500/5 blur-[120px] rounded-full pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
             <span className="font-display font-medium text-xs text-gold-500 uppercase tracking-[0.3em] block mb-3">
               CLIENT CONFIDENCE
@@ -880,56 +1154,81 @@ const Home = ({ setCurrentPage }) => {
             </h2>
           </div>
 
-          {/* Testimonial slider view */}
-          <div className="relative min-h-[300px] flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTestimonial}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.4 }}
-                className="text-center"
-              >
-                {/* Stars */}
-                <div className="flex justify-center gap-1 mb-6 text-gold-400">
-                  {[...Array(testimonials[activeTestimonial].rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 fill-gold-400 text-gold-400" />
-                  ))}
-                </div>
-                
-                {/* Quote */}
-                <p className="font-serif italic text-white/95 text-lg md:text-2xl leading-relaxed mb-8 max-w-3xl mx-auto">
-                  “{testimonials[activeTestimonial].quote}”
-                </p>
+          <div className="relative w-full max-w-4xl mx-auto flex items-center justify-between">
+            {/* Left Nav Button */}
+            <button 
+              onClick={() => setActiveTestimonial((prev) => (prev - 1 + testimonials.length) % testimonials.length)}
+              className="absolute -left-6 lg:-left-16 p-3 rounded-full border border-white/5 bg-dark-950/80 hover:bg-gold-500 text-white hover:text-dark-950 hover:border-gold-500 transition-all cursor-pointer hidden md:flex items-center justify-center z-20 shadow-2xl group"
+              title="Previous Testimonial"
+            >
+              <ChevronLeft className="w-5 h-5 transition-transform group-hover:-translate-x-0.5" />
+            </button>
 
-                {/* Profile detail */}
-                <div className="flex items-center justify-center gap-4">
-                  <img 
-                    src={testimonials[activeTestimonial].avatar} 
-                    alt={testimonials[activeTestimonial].name} 
-                    className="w-12 h-12 rounded-full object-cover border border-gold-500/30"
-                  />
-                  <div className="text-left">
-                    <span className="block font-display font-medium text-sm text-white">
-                      {testimonials[activeTestimonial].name}
-                    </span>
-                    <span className="block font-sans font-light text-xs text-gold-400">
-                      {testimonials[activeTestimonial].role}
-                    </span>
+            {/* Redesigned Testimonial Slider Panel */}
+            <div className="glass-panel p-8 md:p-14 rounded-lg border border-white/5 shadow-2xl relative w-full overflow-hidden min-h-[380px] md:min-h-[310px] flex flex-col justify-between">
+              {/* Background gold quote icon */}
+              <Quote className="absolute -top-4 -left-4 w-32 h-32 text-gold-500/5 -rotate-12 pointer-events-none" />
+              
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTestimonial}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex flex-col justify-between h-full relative z-10"
+                >
+                  <div>
+                    {/* Stars */}
+                    <div className="flex justify-center gap-1.5 mb-6 text-gold-400">
+                      {[...Array(testimonials[activeTestimonial].rating)].map((_, i) => (
+                        <Star key={i} className="w-4.5 h-4.5 fill-gold-400 text-gold-400" />
+                      ))}
+                    </div>
+                    
+                    {/* Quote */}
+                    <p className="font-serif italic text-white/95 text-lg md:text-xl leading-relaxed text-center mb-8 max-w-2xl mx-auto px-2">
+                      “{testimonials[activeTestimonial].quote}”
+                    </p>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+
+                  {/* Profile detail */}
+                  <div className="flex items-center justify-center gap-4 border-t border-white/5 pt-6 w-fit mx-auto">
+                    <img 
+                      src={testimonials[activeTestimonial].avatar} 
+                      alt={testimonials[activeTestimonial].name} 
+                      className="w-14 h-14 rounded-full object-cover ring-2 ring-gold-500/30 ring-offset-4 ring-offset-dark-950 shadow-lg"
+                    />
+                    <div className="text-left">
+                      <span className="block font-display font-medium text-sm text-white">
+                        {testimonials[activeTestimonial].name}
+                      </span>
+                      <span className="block font-sans font-light text-xs text-gold-400 uppercase tracking-wider mt-0.5">
+                        {testimonials[activeTestimonial].role}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Right Nav Button */}
+            <button 
+              onClick={() => setActiveTestimonial((prev) => (prev + 1) % testimonials.length)}
+              className="absolute -right-6 lg:-right-16 p-3 rounded-full border border-white/5 bg-dark-950/80 hover:bg-gold-500 text-white hover:text-dark-950 hover:border-gold-500 transition-all cursor-pointer hidden md:flex items-center justify-center z-20 shadow-2xl group"
+              title="Next Testimonial"
+            >
+              <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
+            </button>
           </div>
 
           {/* Slide dots */}
-          <div className="flex justify-center gap-2.5 mt-10">
+          <div className="flex justify-center gap-2.5 mt-8">
             {testimonials.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setActiveTestimonial(i)}
-                className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-all duration-350 ${
+                className={`w-2.5 h-2.5 rounded-full cursor-pointer transition-all duration-300 ${
                   activeTestimonial === i ? 'bg-gold-500 scale-125' : 'bg-white/10 hover:bg-white/30'
                 }`}
               />

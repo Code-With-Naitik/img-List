@@ -10,7 +10,9 @@ const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:50
 
 const Admin = () => {
   // Authentication State
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('isAdminAuthenticated') === 'true';
+  });
   const [credentials, setCredentials] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
 
@@ -98,6 +100,7 @@ const Admin = () => {
     e.preventDefault();
     if (credentials.username === 'admin' && credentials.password === 'admin123') {
       setIsAuthenticated(true);
+      localStorage.setItem('isAdminAuthenticated', 'true');
       setLoginError('');
       triggerAlert('Authenticated successfully as Studio Director.');
     } else {
@@ -295,7 +298,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="pt-24 pb-20 min-h-screen relative overflow-x-hidden bg-[#050507]">
+    <div className="min-h-screen h-screen flex flex-row overflow-hidden bg-[#050507] text-white">
 
       {/* Alert Overlay Banner */}
       <AnimatePresence>
@@ -315,17 +318,85 @@ const Admin = () => {
         )}
       </AnimatePresence>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 1. Modern Left Sidebar Panel */}
+      <aside className="w-64 border-r border-white/5 bg-[#08080a] flex flex-col justify-between p-6 shrink-0 relative z-20">
+        <div className="space-y-8">
+          
+          {/* Logo Brand Header */}
+          <div className="flex items-center gap-3 border-b border-white/5 pb-6">
+            <div className="p-2.5 bg-gold-500/10 border border-gold-500/20 text-gold-400 rounded-sm">
+              <LayoutDashboard className="w-5 h-5 text-gold-400" />
+            </div>
+            <div>
+              <h2 className="font-display font-bold text-xs tracking-widest text-white uppercase">AI STUDIO</h2>
+              <span className="text-[8px] font-display text-gold-500/80 tracking-[0.2em] uppercase block mt-0.5">DIRECTOR MODE</span>
+            </div>
+          </div>
+
+          {/* Navigation Controls */}
+          <nav className="space-y-2">
+            {[
+              { id: 'orders', label: 'Bulk Orders', count: orders.length, icon: <ShoppingBag className="w-4 h-4" /> },
+              { id: 'samples', label: 'Free Samples', count: samples.length, icon: <Gift className="w-4 h-4" /> },
+              { id: 'messages', label: 'Contact Inbox', count: messages.length, icon: <MessageSquare className="w-4 h-4" /> },
+              { id: 'portfolio', label: 'Live Showroom', count: portfolio.length, icon: <Image className="w-4 h-4" /> }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full px-4 py-3 rounded-sm text-[10px] font-display tracking-widest uppercase transition-all duration-300 cursor-pointer flex items-center justify-between border ${
+                  activeTab === tab.id
+                    ? 'bg-gold-500 border-gold-500 text-dark-950 font-semibold shadow-lg shadow-gold-500/10'
+                    : 'border-transparent hover:bg-white/5 hover:border-white/5 text-white/80'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  {tab.icon}
+                  <span>{tab.label}</span>
+                </div>
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  activeTab === tab.id ? 'bg-dark-950 text-gold-400 font-bold' : 'bg-white/5 text-dark-300'
+                }`}>
+                  {tab.count}
+                </span>
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        {/* Console Footers */}
+        <div className="space-y-3 pt-6 border-t border-white/5">
+          <button
+            onClick={() => window.location.href = '/'}
+            className="w-full px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-sm text-[10px] font-display tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <Activity className="w-3.5 h-3.5 text-gold-400" />
+            <span>Return to Site</span>
+          </button>
+          <button
+            onClick={() => {
+              setIsAuthenticated(false);
+              localStorage.removeItem('isAdminAuthenticated');
+            }}
+            className="w-full px-4 py-3 bg-red-950/20 hover:bg-red-950/40 border border-red-500/10 hover:border-red-500/40 text-red-400 rounded-sm text-[10px] font-display tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>Sign Out</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* 2. Main Stats and Scrollable Panel */}
+      <div className="flex-grow overflow-y-auto p-8 md:p-10 relative">
 
         {/* Header Console */}
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 pb-6 mb-10 gap-6">
           <div>
             <div className="flex items-center gap-2.5">
               <LayoutDashboard className="w-5 h-5 text-gold-400" />
-              <span className="font-display font-medium text-xs text-gold-400 uppercase tracking-widest">Studio Workspace</span>
+              <span className="font-display font-medium text-xs text-gold-400 uppercase tracking-widest">Workspace</span>
             </div>
             <h1 className="font-serif text-3xl md:text-4xl text-white font-medium mt-1">
-              Command Dashboard
+              {activeTab === 'orders' ? 'Bulk Projects' : activeTab === 'samples' ? 'Free Sandbox' : activeTab === 'messages' ? 'Contact Inbox' : 'Showroom Showcase'}
             </h1>
           </div>
 
@@ -337,13 +408,6 @@ const Admin = () => {
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin text-gold-400' : ''}`} />
               <span>Refresh GPU Logs</span>
-            </button>
-
-            <button
-              onClick={() => setIsAuthenticated(false)}
-              className="px-4 py-2.5 bg-red-950/20 hover:bg-red-950/40 border border-red-500/10 hover:border-red-500/40 text-red-400 rounded-sm text-xs font-display tracking-widest uppercase transition-all duration-300 cursor-pointer"
-            >
-              Sign Out
             </button>
           </div>
         </div>
@@ -396,32 +460,6 @@ const Admin = () => {
             </div>
           </div>
 
-        </div>
-
-        {/* Tab Switcher Console */}
-        <div className="flex items-center gap-2 border-b border-white/5 pb-4 mb-8 overflow-x-auto whitespace-nowrap">
-          {[
-            { id: 'orders', label: 'Bulk Orders', count: orders.length, icon: <ShoppingBag className="w-4 h-4" /> },
-            { id: 'samples', label: 'Free Samples', count: samples.length, icon: <Gift className="w-4 h-4" /> },
-            { id: 'messages', label: 'Contact Inbox', count: messages.length, icon: <MessageSquare className="w-4 h-4" /> },
-            { id: 'portfolio', label: 'Live Showroom', count: portfolio.length, icon: <Image className="w-4 h-4" /> }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-3 rounded-sm text-xs font-display tracking-widest uppercase transition-all duration-350 cursor-pointer flex items-center gap-2 border ${activeTab === tab.id
-                ? 'bg-gold-500 border-gold-500 text-dark-950 font-semibold shadow-md'
-                : 'border-white/5 hover:border-white/20 text-white/80'
-                }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${activeTab === tab.id ? 'bg-dark-950 text-gold-400 font-bold' : 'bg-white/5 text-dark-300'
-                }`}>
-                {tab.count}
-              </span>
-            </button>
-          ))}
         </div>
 
         {/* Tab Contents lists */}

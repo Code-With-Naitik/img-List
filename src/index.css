@@ -154,3 +154,78 @@ html, body {
 .luxury-border-hover:hover::before {
   background: linear-gradient(135deg, #d4a71c, rgba(255,255,255,0.02), #b88614);
 }
+
+/* Luxury Editorial Blog Styling */
+.blog-content h2 {
+  font-family: 'Cinzel', 'Playfair Display', Georgia, serif;
+  font-size: 1.625rem;
+  font-weight: 500;
+  color: #ffffff;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+.blog-content h3 {
+  font-family: 'Montserrat', 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #d4a71c;
+  margin-top: 1.75rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.4;
+}
+
+.blog-content p {
+  font-family: 'Inter', 'Outfit', sans-serif;
+  font-size: 0.975rem;
+  font-weight: 300;
+  color: #a3a3a3;
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.blog-content p strong {
+  color: #ffffff;
+  font-weight: 500;
+}
+
+.blog-content p em {
+  color: #d4a71c;
+}
+
+.blog-content blockquote {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.25rem;
+  color: #ffffff;
+  border-left: 2px solid #d4a71c;
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  line-height: 1.6;
+}
+
+.blog-content ul, .blog-content ol {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.blog-content li {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.975rem;
+  font-weight: 300;
+  color: #a3a3a3;
+  line-height: 1.8;
+  margin-bottom: 0.75rem;
+}
+
+.blog-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.blog-content th, .blog-content td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+

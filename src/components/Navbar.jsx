@@ -31,8 +31,8 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
     { label: 'Portfolio', value: 'portfolio' },
     { label: 'Pricing', value: 'pricing' },
     { label: 'Order Now', value: 'order' },
+    { label: 'Blog', value: 'blog' },
     { label: 'Contact', value: 'contact' },
-    { label: 'Admin Portal', value: 'admin' },
   ];
 
   const handleNavClick = (pageValue) => {
@@ -42,24 +42,23 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
   };
 
   return (
-    <header 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled 
-          ? 'bg-dark-950/80 backdrop-blur-md border-b border-white/5 py-4' 
-          : 'bg-transparent py-6'
-      }`}
+    <header
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
+        ? 'bg-dark-950/80 backdrop-blur-md border-b border-white/5 py-4'
+        : 'bg-transparent py-6'
+        }`}
     >
       {/* Scroll Progress Bar */}
-      <div 
+      <div
         className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-gold-600 via-gold-400 to-white transition-all duration-75"
         style={{ width: `${scrollProgress}%` }}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
-          
+
           {/* Logo Brand */}
-          <div 
+          <div
             onClick={() => handleNavClick('home')}
             className="flex items-center gap-2 cursor-pointer group"
           >
@@ -82,11 +81,10 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
               <button
                 key={item.value}
                 onClick={() => handleNavClick(item.value)}
-                className={`relative font-sans text-sm tracking-wider uppercase transition-colors cursor-pointer py-1 ${
-                  currentPage === item.value 
-                    ? 'text-gold-400 font-semibold' 
-                    : 'text-dark-300 hover:text-white'
-                }`}
+                className={`relative font-sans text-sm tracking-wider uppercase transition-colors cursor-pointer py-1 ${currentPage === item.value
+                  ? 'text-gold-400 font-semibold'
+                  : 'text-dark-300 hover:text-white'
+                  }`}
               >
                 {item.label}
                 {currentPage === item.value && (
@@ -98,13 +96,6 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
 
           {/* Call To Action Buttons */}
           <div className="hidden md:flex items-center gap-4">
-            <button 
-              onClick={() => handleNavClick('contact')}
-              className="font-sans text-xs tracking-widest uppercase text-white/80 hover:text-white transition-colors cursor-pointer py-2 px-4"
-            >
-              Get Consultation
-            </button>
-            
             <button
               onClick={() => handleNavClick('order')}
               className="relative overflow-hidden group bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-dark-950 font-display font-medium text-sm tracking-wide py-2.5 px-6 rounded-sm shadow-lg shadow-gold-600/10 hover:shadow-gold-500/20 transition-all duration-300 cursor-pointer flex items-center gap-2"
@@ -135,14 +126,13 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
               <button
                 key={item.value}
                 onClick={() => handleNavClick(item.value)}
-                className={`text-left font-sans text-sm tracking-widest uppercase py-3 border-b border-white/5 ${
-                  currentPage === item.value ? 'text-gold-400 font-semibold pl-2 border-l-2 border-l-gold-400' : 'text-dark-300'
-                }`}
+                className={`text-left font-sans text-sm tracking-widest uppercase py-3 border-b border-white/5 ${currentPage === item.value ? 'text-gold-400 font-semibold pl-2 border-l-2 border-l-gold-400' : 'text-dark-300'
+                  }`}
               >
                 {item.label}
               </button>
             ))}
-            
+
             <div className="flex flex-col gap-3 pt-4">
               <button
                 onClick={() => handleNavClick('contact')}
@@ -150,7 +140,7 @@ const Navbar = ({ currentPage, setCurrentPage }) => {
               >
                 Contact Studio
               </button>
-              
+
               <button
                 onClick={() => handleNavClick('order')}
                 className="w-full text-center bg-gold-500 hover:bg-gold-400 text-dark-950 font-display font-medium text-sm tracking-widest uppercase py-3 rounded-sm shadow-md transition-colors"

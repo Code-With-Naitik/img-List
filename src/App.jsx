@@ -9,11 +9,44 @@ import Pricing from './pages/Pricing';
 import Order from './pages/Order';
 import Contact from './pages/Contact';
 import Admin from './pages/Admin';
+import MyTheme from './pages/MyTheme';
+import Blog from './pages/Blog';
 import { Sparkles } from 'lucide-react';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home');
+  const getInitialPage = () => {
+    const path = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase();
+    if (['admin', 'blog', 'portfolio', 'pricing', 'mytheme', 'order', 'contact'].includes(path)) {
+      return path;
+    }
+    return 'home';
+  };
+
+  const [currentPage, setCurrentPage] = useState(getInitialPage);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Sync state changes with URL history
+  useEffect(() => {
+    const path = currentPage === 'home' ? '/' : `/${currentPage}`;
+    if (window.location.pathname !== path) {
+      window.history.pushState({ page: currentPage }, '', path);
+    }
+  }, [currentPage]);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname.replace(/^\/|\/$/g, '').toLowerCase();
+      if (['admin', 'blog', 'portfolio', 'pricing', 'mytheme', 'order', 'contact'].includes(path)) {
+        setCurrentPage(path);
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     // Luxury entrance screen timer (2 seconds)
@@ -23,10 +56,17 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Global SPA Scroll-to-Top on page change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
         return <Home setCurrentPage={setCurrentPage} />;
+      case 'mytheme':
+        return <MyTheme setCurrentPage={setCurrentPage} />;
       case 'portfolio':
         return <Portfolio setCurrentPage={setCurrentPage} />;
       case 'pricing':
@@ -35,6 +75,8 @@ function App() {
         return <Order />;
       case 'contact':
         return <Contact />;
+      case 'blog':
+        return <Blog />;
       case 'admin':
         return <Admin />;
       default:
@@ -66,7 +108,7 @@ function App() {
                 <Sparkles className="w-10 h-10 text-gold-400" />
               </div>
               <div>
-                <motion.h2 
+                <motion.h2
                   initial={{ letterSpacing: '0.1em' }}
                   animate={{ letterSpacing: '0.25em' }}
                   transition={{ duration: 1.5, ease: 'easeOut' }}
@@ -85,7 +127,7 @@ function App() {
             </motion.div>
           </motion.div>
         ) : (
-          <motion.div 
+          <motion.div
             key="app-content"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -93,7 +135,9 @@ function App() {
             className="flex flex-col min-h-screen relative"
           >
             {/* Elegant Global Nav */}
-            <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+            {currentPage !== 'admin' && (
+              <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
+            )}
 
             {/* Dynamic Page Component with Smooth Animated Slide Transition */}
             <main className="flex-grow">
@@ -111,7 +155,9 @@ function App() {
             </main>
 
             {/* Global Footer */}
-            <Footer setCurrentPage={setCurrentPage} />
+            {currentPage !== 'admin' && (
+              <Footer setCurrentPage={setCurrentPage} />
+            )}
           </motion.div>
         )}
       </AnimatePresence>

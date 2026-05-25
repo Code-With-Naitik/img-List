@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { UploadCloud, CheckCircle2, ChevronRight, HelpCircle, ArrowRight, ShieldCheck, Heart } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { UploadCloud, CheckCircle2, ChevronRight, HelpCircle, ArrowRight, ShieldCheck, Heart, Sparkles } from 'lucide-react';
 
 const Order = () => {
   const [formData, setFormData] = useState({
     category: 'Saree',
-    background: 'Palace Courtyard, Jaipur',
-    modelType: 'Heritage North Indian',
+    background: 'Royal Palace Courtyard',
+    modelType: 'Heritage North Indian Face',
     whatsapp: '',
     notes: '',
     name: '',
@@ -15,6 +16,25 @@ const Order = () => {
   const [fileName, setFileName] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [customThemeApplied, setCustomThemeApplied] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('selected_custom_theme');
+    if (savedTheme) {
+      try {
+        const theme = JSON.parse(savedTheme);
+        setFormData(prev => ({
+          ...prev,
+          background: theme.location || prev.background,
+          modelType: theme.modelType || prev.modelType,
+          notes: theme.notes || prev.notes
+        }));
+        setCustomThemeApplied(true);
+      } catch (e) {
+        console.error('Error parsing custom theme:', e);
+      }
+    }
+  }, []);
 
   const backgrounds = [
     { id: 'palace', label: 'Royal Palace Courtyard', location: 'Jaipur', extraPrice: 0 },
@@ -113,13 +133,13 @@ const Order = () => {
 
   return (
     <div className="pt-24 pb-20 min-h-screen relative overflow-x-hidden">
-      
+
       {/* Light background nodes */}
       <div className="absolute top-20 right-1/4 w-[400px] h-[400px] bg-gold-600/5 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-20 left-1/4 w-[350px] h-[350px] bg-white/5 blur-[100px] pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-10">
-        
+
         {/* Header Block */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="font-serif text-4xl md:text-6xl font-medium tracking-tight text-white mb-6">
@@ -129,6 +149,16 @@ const Order = () => {
           <p className="font-sans font-light text-dark-400 text-base md:text-lg max-w-xl mx-auto">
             Design your exact visual setup. Upload the product laying flat and select matching avatar parameters for an instant premium generation.
           </p>
+          {customThemeApplied && (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gold-500/10 border border-gold-500/35 text-gold-400 text-xs font-sans tracking-wide glow-gold mx-auto"
+            >
+              <Sparkles className="w-4 h-4 text-gold-400 animate-pulse animate-duration-1000" />
+              <span className="font-medium">Applied custom signature preset from My Theme Studio!</span>
+            </motion.div>
+          )}
         </div>
 
         {submitted ? (
@@ -163,10 +193,10 @@ const Order = () => {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-            
+
             {/* Form Setup Block */}
             <div className="lg:col-span-2 space-y-8">
-              
+
               {/* Box 1: Product Upload */}
               <div className="glass-panel p-8 rounded-sm border border-white/5 space-y-6">
                 <div className="border-b border-white/5 pb-4">
@@ -182,20 +212,19 @@ const Order = () => {
                   onDragOver={handleDragOver}
                   onDragLeave={handleDragLeave}
                   onDrop={handleDrop}
-                  className={`border-2 border-dashed rounded-sm p-10 text-center cursor-pointer transition-colors duration-300 ${
-                    isDragging 
-                      ? 'border-gold-500 bg-gold-500/5' 
-                      : fileName 
-                        ? 'border-gold-500/50 bg-white/5' 
+                  className={`border-2 border-dashed rounded-sm p-10 text-center cursor-pointer transition-colors duration-300 ${isDragging
+                      ? 'border-gold-500 bg-gold-500/5'
+                      : fileName
+                        ? 'border-gold-500/50 bg-white/5'
                         : 'border-white/10 hover:border-gold-500/40 bg-dark-950/40'
-                  }`}
+                    }`}
                 >
-                  <input 
-                    type="file" 
-                    id="order-upload" 
+                  <input
+                    type="file"
+                    id="order-upload"
                     accept="image/*"
                     onChange={handleFileChange}
-                    className="hidden" 
+                    className="hidden"
                     required
                   />
                   <label htmlFor="order-upload" className="cursor-pointer">
@@ -242,8 +271,8 @@ const Order = () => {
                     <label className="block text-xs font-display text-white/80 uppercase tracking-wider mb-2">
                       Saree Brand Owner Name
                     </label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="name"
                       required
                       value={formData.name}
@@ -256,8 +285,8 @@ const Order = () => {
                     <label className="block text-xs font-display text-white/80 uppercase tracking-wider mb-2">
                       Official Brand / Shop Name
                     </label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       name="brand"
                       required
                       value={formData.brand}
@@ -273,7 +302,7 @@ const Order = () => {
                     <label className="block text-xs font-display text-white/80 uppercase tracking-wider mb-2">
                       Product Ethnic Category
                     </label>
-                    <select 
+                    <select
                       name="category"
                       value={formData.category}
                       onChange={handleInputChange}
@@ -290,8 +319,8 @@ const Order = () => {
                     <label className="block text-xs font-display text-white/80 uppercase tracking-wider mb-2">
                       WhatsApp Delivery Number
                     </label>
-                    <input 
-                      type="tel" 
+                    <input
+                      type="tel"
                       name="whatsapp"
                       required
                       value={formData.whatsapp}
@@ -319,15 +348,13 @@ const Order = () => {
                     <div
                       key={mod.id}
                       onClick={() => handleModelChange(mod.label)}
-                      className={`p-5 rounded-sm border cursor-pointer transition-all duration-300 text-left ${
-                        formData.modelType === mod.label
+                      className={`p-5 rounded-sm border cursor-pointer transition-all duration-300 text-left ${formData.modelType === mod.label
                           ? 'border-gold-500 bg-gold-500/5 shadow-inner'
                           : 'border-white/10 bg-dark-950/40 hover:border-white/20'
-                      }`}
+                        }`}
                     >
-                      <h4 className={`font-display font-medium text-sm mb-1 ${
-                        formData.modelType === mod.label ? 'text-gold-400' : 'text-white'
-                      }`}>
+                      <h4 className={`font-display font-medium text-sm mb-1 ${formData.modelType === mod.label ? 'text-gold-400' : 'text-white'
+                        }`}>
                         {mod.label}
                       </h4>
                       <p className="text-dark-400 font-sans text-xs font-light leading-relaxed">
@@ -354,16 +381,14 @@ const Order = () => {
                     <div
                       key={bg.id}
                       onClick={() => handleBackgroundChange(bg.label)}
-                      className={`p-5 rounded-sm border cursor-pointer transition-all duration-300 text-left flex justify-between items-start ${
-                        formData.background === bg.label
+                      className={`p-5 rounded-sm border cursor-pointer transition-all duration-300 text-left flex justify-between items-start ${formData.background === bg.label
                           ? 'border-gold-500 bg-gold-500/5 shadow-inner'
                           : 'border-white/10 bg-dark-950/40 hover:border-white/20'
-                      }`}
+                        }`}
                     >
                       <div>
-                        <h4 className={`font-display font-medium text-sm mb-1 ${
-                          formData.background === bg.label ? 'text-gold-400' : 'text-white'
-                        }`}>
+                        <h4 className={`font-display font-medium text-sm mb-1 ${formData.background === bg.label ? 'text-gold-400' : 'text-white'
+                          }`}>
                           {bg.label}
                         </h4>
                         <span className="text-dark-400 font-sans text-xs font-light">
@@ -405,7 +430,7 @@ const Order = () => {
 
             {/* Sidebar Summary Block */}
             <div className="space-y-6 lg:sticky lg:top-24">
-              
+
               <div className="glass-panel-gold glow-gold p-8 rounded-sm border border-gold-500/15">
                 <h3 className="font-display font-semibold text-white text-base uppercase tracking-wider mb-6 pb-4 border-b border-white/10">
                   Shoot Configuration
@@ -417,7 +442,7 @@ const Order = () => {
                     <span className="text-dark-400 font-light">Ethnic Category:</span>
                     <span className="text-white font-medium">{formData.category}</span>
                   </div>
-                  
+
                   {/* Model summary */}
                   <div className="flex justify-between py-1.5 border-b border-white/5">
                     <span className="text-dark-400 font-light">Model Face:</span>
@@ -473,11 +498,10 @@ const Order = () => {
                 <button
                   type="submit"
                   disabled={!fileName}
-                  className={`w-full font-sans text-xs font-semibold tracking-widest uppercase py-4 rounded-sm transition-all duration-300 flex items-center justify-center gap-2 ${
-                    fileName
+                  className={`w-full font-sans text-xs font-semibold tracking-widest uppercase py-4 rounded-sm transition-all duration-300 flex items-center justify-center gap-2 ${fileName
                       ? 'bg-gold-500 hover:bg-gold-400 text-dark-950 cursor-pointer shadow-md shadow-gold-500/10'
                       : 'bg-white/5 text-white/40 border border-white/5 cursor-not-allowed'
-                  }`}
+                    }`}
                 >
                   <span>Dispatch Shoot Order</span>
                   <ArrowRight className="w-4 h-4" />
