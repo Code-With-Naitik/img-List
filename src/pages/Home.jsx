@@ -31,20 +31,20 @@ const Home = ({ setCurrentPage }) => {
           const mapped = data.map((item, index) => {
             const numId = item.id || index;
             const fallbacks = {
-              sarees: ['/after_saree.png', '/model_green.png', '/model_purple.png'],
-              lehengas: ['/model_purple.png', '/after_saree.png', '/model_green.png'],
-              kurtis: ['/model_green.png', '/model_purple.png', '/after_saree.png'],
-              jewelry: ['/model_purple.png', '/after_saree.png', '/model_green.png']
+              sarees: ['/after_saree.png', '/model_green.png', '/model_purple.png', '/model_blue.png'],
+              lehengas: ['/model_purple.png', '/after_saree.png', '/model_green.png', '/model_blue.png'],
+              kurtis: ['/model_green.png', '/model_purple.png', '/after_saree.png', '/model_blue.png'],
+              jewelry: ['/model_purple.png', '/after_saree.png', '/model_green.png', '/model_blue.png']
             };
             const list = fallbacks[item.category || 'sarees'] || fallbacks.sarees;
             return {
-              id: item._id || item.id,
+              id: item.id || item._id || index,
               category: item.category || 'sarees',
               title: item.title || '',
               img: item.img || list[numId % list.length],
               location: item.location || 'Studio Workspace',
               model: item.model || 'AI Custom Model',
-              time: item.lighting || item.time || 'Studio Lighting'
+              time: item.time || item.lighting || 'Studio Lighting'
             };
           });
           setDynamicItems(mapped);
@@ -254,16 +254,7 @@ const Home = ({ setCurrentPage }) => {
     { id: 20, category: 'jewelry', title: 'Pearl Bridal Ornament Necklace', img: 'https://images.unsplash.com/photo-1561414927-6d86591d0c4f?q=80&w=600&auto=format&fit=crop' }
   ];
 
-  const mergedItems = [...dynamicItems];
-  portfolioItems.forEach(staticItem => {
-    const isDuplicate = dynamicItems.some(dynItem => 
-      (dynItem.img && dynItem.img === staticItem.img) || 
-      (dynItem.title && staticItem.title && dynItem.title.toLowerCase() === staticItem.title.toLowerCase())
-    );
-    if (!isDuplicate) {
-      mergedItems.push(staticItem);
-    }
-  });
+  const mergedItems = dynamicItems.length > 0 ? dynamicItems : portfolioItems;
 
   const filteredItems = activeFilter === 'all'
     ? mergedItems
@@ -791,10 +782,10 @@ const Home = ({ setCurrentPage }) => {
                       onError={(e) => {
                         e.target.onerror = null;
                         const fallbacks = {
-                          sarees: ['/after_saree.png', '/model_green.png', '/model_purple.png'],
-                          lehengas: ['/model_purple.png', '/after_saree.png', '/model_green.png'],
-                          kurtis: ['/model_green.png', '/model_purple.png', '/after_saree.png'],
-                          jewelry: ['/model_purple.png', '/after_saree.png', '/model_green.png']
+                          sarees: ['/after_saree.png', '/model_green.png', '/model_purple.png', '/model_blue.png'],
+                          lehengas: ['/model_purple.png', '/after_saree.png', '/model_green.png', '/model_blue.png'],
+                          kurtis: ['/model_green.png', '/model_purple.png', '/after_saree.png', '/model_blue.png'],
+                          jewelry: ['/model_purple.png', '/after_saree.png', '/model_green.png', '/model_blue.png']
                         };
                         const list = fallbacks[item.category] || fallbacks.sarees;
                         const idx = (Number(item.id) || 0) % list.length;

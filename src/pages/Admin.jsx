@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Lock, LayoutDashboard, ShoppingBag, Gift, MessageSquare,
   Image, Trash2, Edit3, Plus, CheckCircle2, X, RefreshCw,
-  TrendingUp, Users, DollarSign, Activity, AlertCircle
+  TrendingUp, Users, DollarSign, Activity, AlertCircle, Menu
 } from 'lucide-react';
 
 const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
@@ -18,6 +18,9 @@ const Admin = () => {
 
   // Dashboard Active Tab
   const [activeTab, setActiveTab] = useState('orders'); // 'orders', 'samples', 'messages', 'portfolio'
+
+  // Mobile Sidebar Toggle State
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Data Collections
   const [orders, setOrders] = useState([]);
@@ -230,7 +233,7 @@ const Admin = () => {
         <div className="absolute top-1/4 left-1/4 w-[300px] h-[300px] bg-gold-600/5 blur-[100px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-white/5 blur-[100px] pointer-events-none" />
 
-        <div className="max-w-md w-full glass-panel-gold border border-gold-500/20 p-8 rounded-sm shadow-2xl relative z-10">
+        <div className="max-w-md w-full glass-panel-gold border border-gold-500/20 p-6 sm:p-8 rounded-sm shadow-2xl relative z-10">
           <div className="text-center mb-8">
             <div className="p-3 bg-gold-500/10 border border-gold-500/20 text-gold-400 rounded-full w-fit mx-auto mb-4">
               <Lock className="w-6 h-6 text-gold-400" />
@@ -298,7 +301,7 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen h-screen flex flex-row overflow-hidden bg-[#050507] text-white">
+    <div className="min-h-screen h-screen flex flex-col md:flex-row overflow-hidden bg-[#050507] text-white">
 
       {/* Alert Overlay Banner */}
       <AnimatePresence>
@@ -318,19 +321,57 @@ const Admin = () => {
         )}
       </AnimatePresence>
 
-      {/* 1. Modern Left Sidebar Panel */}
-      <aside className="w-64 border-r border-white/5 bg-[#08080a] flex flex-col justify-between p-6 shrink-0 relative z-20">
+      {/* Mobile Top Navigation Header */}
+      <header className="md:hidden w-full bg-[#08080a] border-b border-white/5 px-6 py-4 flex items-center justify-between z-30 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-gold-500/10 border border-gold-500/20 text-gold-400 rounded-sm">
+            <LayoutDashboard className="w-4 h-4 text-gold-400" />
+          </div>
+          <div>
+            <h2 className="font-display font-bold text-[10px] tracking-widest text-white uppercase">AI STUDIO</h2>
+            <span className="text-[7px] font-display text-gold-500/80 tracking-[0.2em] uppercase block mt-0.5">DIRECTOR MODE</span>
+          </div>
+        </div>
+        <button
+          onClick={() => setIsSidebarOpen(true)}
+          className="p-2 bg-white/5 border border-white/10 hover:border-gold-500/50 text-white rounded-sm transition-colors cursor-pointer flex items-center justify-center"
+        >
+          <Menu className="w-4 h-4 text-white" />
+        </button>
+      </header>
+
+      {/* Mobile Sidebar Overlay Backdrop */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* 1. Modern Left Sidebar Panel (Responsive Drawer) */}
+      <aside className={`w-64 border-r border-white/5 bg-[#08080a] flex flex-col justify-between p-6 shrink-0 z-40 transition-transform duration-300 fixed inset-y-0 left-0 md:relative md:translate-x-0 ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
         <div className="space-y-8">
           
           {/* Logo Brand Header */}
-          <div className="flex items-center gap-3 border-b border-white/5 pb-6">
-            <div className="p-2.5 bg-gold-500/10 border border-gold-500/20 text-gold-400 rounded-sm">
-              <LayoutDashboard className="w-5 h-5 text-gold-400" />
+          <div className="flex items-center justify-between border-b border-white/5 pb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gold-500/10 border border-gold-500/20 text-gold-400 rounded-sm">
+                <LayoutDashboard className="w-5 h-5 text-gold-400" />
+              </div>
+              <div>
+                <h2 className="font-display font-bold text-xs tracking-widest text-white uppercase">AI STUDIO</h2>
+                <span className="text-[8px] font-display text-gold-500/80 tracking-[0.2em] uppercase block mt-0.5">DIRECTOR MODE</span>
+              </div>
             </div>
-            <div>
-              <h2 className="font-display font-bold text-xs tracking-widest text-white uppercase">AI STUDIO</h2>
-              <span className="text-[8px] font-display text-gold-500/80 tracking-[0.2em] uppercase block mt-0.5">DIRECTOR MODE</span>
-            </div>
+            {/* Mobile close button */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="md:hidden p-1.5 bg-white/5 border border-white/10 hover:border-gold-500/50 text-white rounded-sm transition-colors cursor-pointer flex items-center justify-center"
+            >
+              <X className="w-4 h-4 text-white" />
+            </button>
           </div>
 
           {/* Navigation Controls */}
@@ -339,11 +380,14 @@ const Admin = () => {
               { id: 'orders', label: 'Bulk Orders', count: orders.length, icon: <ShoppingBag className="w-4 h-4" /> },
               { id: 'samples', label: 'Free Samples', count: samples.length, icon: <Gift className="w-4 h-4" /> },
               { id: 'messages', label: 'Contact Inbox', count: messages.length, icon: <MessageSquare className="w-4 h-4" /> },
-              { id: 'portfolio', label: 'Live Showroom', count: portfolio.length, icon: <Image className="w-4 h-4" /> }
+              { id: 'portfolio', label: 'Portfolio', count: portfolio.length, icon: <Image className="w-4 h-4" /> }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setIsSidebarOpen(false);
+                }}
                 className={`w-full px-4 py-3 rounded-sm text-[10px] font-display tracking-widest uppercase transition-all duration-300 cursor-pointer flex items-center justify-between border ${
                   activeTab === tab.id
                     ? 'bg-gold-500 border-gold-500 text-dark-950 font-semibold shadow-lg shadow-gold-500/10'
@@ -367,7 +411,10 @@ const Admin = () => {
         {/* Console Footers */}
         <div className="space-y-3 pt-6 border-t border-white/5">
           <button
-            onClick={() => window.location.href = '/'}
+            onClick={() => {
+              window.location.href = '/';
+              setIsSidebarOpen(false);
+            }}
             className="w-full px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-sm text-[10px] font-display tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Activity className="w-3.5 h-3.5 text-gold-400" />
@@ -377,6 +424,7 @@ const Admin = () => {
             onClick={() => {
               setIsAuthenticated(false);
               localStorage.removeItem('isAdminAuthenticated');
+              setIsSidebarOpen(false);
             }}
             className="w-full px-4 py-3 bg-red-950/20 hover:bg-red-950/40 border border-red-500/10 hover:border-red-500/40 text-red-400 rounded-sm text-[10px] font-display tracking-widest uppercase transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer"
           >
@@ -386,7 +434,7 @@ const Admin = () => {
       </aside>
 
       {/* 2. Main Stats and Scrollable Panel */}
-      <div className="flex-grow overflow-y-auto p-8 md:p-10 relative">
+      <div className="flex-grow overflow-y-auto p-4 sm:p-8 md:p-10 relative">
 
         {/* Header Console */}
         <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 pb-6 mb-10 gap-6">
@@ -396,7 +444,7 @@ const Admin = () => {
               <span className="font-display font-medium text-xs text-gold-400 uppercase tracking-widest">Workspace</span>
             </div>
             <h1 className="font-serif text-3xl md:text-4xl text-white font-medium mt-1">
-              {activeTab === 'orders' ? 'Bulk Projects' : activeTab === 'samples' ? 'Free Sandbox' : activeTab === 'messages' ? 'Contact Inbox' : 'Showroom Showcase'}
+              {activeTab === 'orders' ? 'Bulk Projects' : activeTab === 'samples' ? 'Free Sandbox' : activeTab === 'messages' ? 'Contact Inbox' : 'Portfolio Showcase'}
             </h1>
           </div>
 
@@ -468,7 +516,7 @@ const Admin = () => {
           {/* TAB 1: BULK ORDERS */}
           {activeTab === 'orders' && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/2 font-display text-xs text-white uppercase tracking-wider">
                     <th className="p-5 font-semibold">Order ID</th>
@@ -532,7 +580,7 @@ const Admin = () => {
           {/* TAB 2: FREE SAMPLES */}
           {activeTab === 'samples' && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/2 font-display text-xs text-white uppercase tracking-wider">
                     <th className="p-5 font-semibold">Sample ID</th>
@@ -591,7 +639,7 @@ const Admin = () => {
           {/* TAB 3: CONTACT INBOX */}
           {activeTab === 'messages' && (
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/2 font-display text-xs text-white uppercase tracking-wider">
                     <th className="p-5 font-semibold">Message ID</th>
@@ -651,22 +699,22 @@ const Admin = () => {
             </div>
           )}
 
-          {/* TAB 4: LIVE SHOWROOM */}
+          {/* TAB 4: PORTFOLIO */}
           {activeTab === 'portfolio' && (
             <div>
               <div className="p-4 bg-white/2 border-b border-white/10 flex justify-between items-center">
-                <span className="font-display font-medium text-xs text-white uppercase tracking-wider">Showroom Showcase Items</span>
+                <span className="font-display font-medium text-xs text-white uppercase tracking-wider">Portfolio Items</span>
                 <button
                   onClick={() => setShowAddPortfolioModal(true)}
                   className="px-4 py-2 bg-gold-500 hover:bg-gold-400 text-dark-950 rounded-sm text-xs font-display font-semibold tracking-widest uppercase transition-all duration-300 flex items-center gap-1.5 cursor-pointer shadow-md shadow-gold-500/10"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Publish New Saree</span>
+                  <span>Add Portfolio Item</span>
                 </button>
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[800px]">
                   <thead>
                     <tr className="border-b border-white/10 bg-white/2 font-display text-xs text-white uppercase tracking-wider">
                       <th className="p-5 font-semibold">Visual</th>
@@ -686,8 +734,12 @@ const Admin = () => {
                         <tr key={p.id} className="hover:bg-white/1">
                           <td className="p-5">
                             <img
-                              src={p.img}
+                              src={p.img || '/after_saree.png'}
                               alt={p.title}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = '/after_saree.png';
+                              }}
                               className="w-12 h-16 object-cover rounded-sm border border-white/10"
                             />
                           </td>
@@ -736,7 +788,7 @@ const Admin = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-lg w-full glass-panel-gold border border-gold-500/30 p-8 rounded-sm shadow-2xl relative"
+              className="max-w-lg w-full glass-panel-gold border border-gold-500/30 p-6 sm:p-8 rounded-sm shadow-2xl relative max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setEditingItem(null)}
@@ -1012,7 +1064,7 @@ const Admin = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-lg w-full glass-panel-gold border border-gold-500/30 p-8 rounded-sm shadow-2xl relative"
+              className="max-w-lg w-full glass-panel-gold border border-gold-500/30 p-6 sm:p-8 rounded-sm shadow-2xl relative max-h-[90vh] overflow-y-auto"
             >
               <button
                 onClick={() => setShowAddPortfolioModal(false)}
@@ -1022,7 +1074,7 @@ const Admin = () => {
               </button>
 
               <h3 className="font-serif text-2xl text-white mb-6 border-b border-white/5 pb-3">
-                Publish Showcase Saree
+                Add Portfolio Item
               </h3>
 
               <form onSubmit={handleAddPortfolio} className="space-y-5">
@@ -1106,7 +1158,7 @@ const Admin = () => {
                   type="submit"
                   className="w-full bg-gradient-to-r from-gold-600 to-gold-500 hover:from-gold-500 hover:to-gold-400 text-dark-950 font-display font-semibold text-xs tracking-widest uppercase py-4 rounded-sm transition-all duration-300 shadow-md shadow-gold-500/10 cursor-pointer text-center"
                 >
-                  Publish Live Showcase
+                  Save Portfolio Item
                 </button>
               </form>
             </motion.div>
@@ -1122,7 +1174,7 @@ const Admin = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="max-w-md w-full glass-panel-gold border border-gold-500/30 p-8 rounded-sm shadow-2xl relative text-center"
+              className="max-w-md w-full glass-panel-gold border border-gold-500/30 p-6 sm:p-8 rounded-sm shadow-2xl relative text-center max-h-[90vh] overflow-y-auto"
             >
               <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-full w-fit mx-auto mb-4">
                 <AlertCircle className="w-8 h-8" />
